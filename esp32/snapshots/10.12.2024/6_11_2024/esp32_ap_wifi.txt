@@ -1,0 +1,175 @@
+// 1
+// #include <WiFi.h>
+// #include <WebSocketsServer.h>
+
+// // Set up access point credentials
+// const char* ssid = "ESP32_EMG";
+// const char* password = "12345678";  // Set this to whatever you'd like
+
+// // Set a fixed IP for the ESP32
+// IPAddress local_IP(192, 168, 4, 1);     // This will be the IP address of the ESP32
+// IPAddress gateway(192, 168, 4, 1);      // The gateway is the same as the ESP32's IP
+// IPAddress subnet(255, 255, 255, 0);     // Standard subnet mask
+
+
+// WebSocketsServer webSocket = WebSocketsServer(81);  // WebSocket port
+
+// unsigned long previousMillis = 0;
+// const long interval = 5;  // 5ms for 200Hz
+
+// void setup() {
+//   Serial.begin(921600);  // Set to 921600 or any higher rate the system can handle.
+
+//   // Configure the ESP32 as an Access Point
+//   if (!WiFi.softAP(ssid, password)) {
+//     Serial.println("Failed to start AP");
+//     return;
+//   }
+
+//   // Set the IP address for the AP
+//   if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
+//     Serial.println("Failed to configure AP IP");
+//     return;
+//   }
+
+//   Serial.println("Access Point started");
+//   Serial.print("IP Address: ");
+//   Serial.println(WiFi.softAPIP());  // Print the IP address to connect to
+
+//   // Start WebSocket server
+//   webSocket.begin();
+//   webSocket.onEvent(webSocketEvent);
+// }
+
+// void loop() {
+//   webSocket.loop();  // Handle WebSocket events
+
+//   unsigned long currentMillis = millis();
+//   if (currentMillis - previousMillis >= interval) {
+//     previousMillis = currentMillis;
+
+//     // Read sensor data
+//     float sensorValue = analogRead(34);  // Replace with actual sensor reading
+//     String message = String(sensorValue);
+//     Serial.println(message);
+    
+//     // Send to all connected clients
+//     webSocket.broadcastTXT(message);
+//   }
+// }
+
+// void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+//   // Handle WebSocket events (not needed for sending data)
+// }
+
+// 2
+
+#include <WiFi.h>
+#include <WebSocketsServer.h>
+
+const char* ssid = "Leivis 2.4 GHz";
+const char* password = "Levente.";
+
+WebSocketsServer webSocket = WebSocketsServer(81);  // WebSocket port
+
+unsigned long previousMillis = 0;
+const long interval = 1;  // 5ms for 200Hz
+
+//test 2
+
+int incrementNumber = 0;
+bool incrementing = true;
+
+// requesting record
+bool isRecording = false;
+
+
+
+//
+
+void setup() {
+  Serial.begin(921600); // Set to 921600 or any higher rate the system can handle.
+
+  
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+
+ Serial.println(WiFi.localIP());
+
+  // Start WebSocket server
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+}
+
+void loop() {
+    webSocket.loop();  // Handle WebSocket events
+    
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+
+        //test
+
+        // int randomNumber = random(0, 4096);  // Generates a random number between 0 and 4095.
+        // String message = String(randomNumber);
+        // Serial.println(message);
+        
+        // // Send to all connected clients
+        // webSocket.broadcastTXT(message);
+
+        //test 2
+
+        //   // Create a string to send
+        // String message = String(incrementNumber);
+        // Serial.println(message);
+        
+        // // Send to all connected clients
+        // webSocket.broadcastTXT(message);
+
+        // // Update the incrementNumber based on whether we're incrementing or decrementing
+        // if (incrementing) {
+        //     incrementNumber++;
+        //     if (incrementNumber >= 4095) {
+        //         incrementing = false;  // Switch to decrementing once we reach 4095
+        //     }
+        // } else {
+        //     incrementNumber--;
+        //     if (incrementNumber <= 0) {
+        //         incrementing = true;  // Switch to incrementing once we reach 0
+        //     }
+        // }
+
+      
+
+        //real
+
+        //Read sensor data
+        float sensorValue = analogRead(34);  // Replace with actual sensor reading
+        String message = String(sensorValue);
+        // Serial.println(message);
+        
+        // Send to all connected clients
+        webSocket.broadcastTXT(message);
+    }
+}
+
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length) {
+    if (type == WStype_TEXT) {
+        String message = String((char *)payload);  // Convert payload to a String
+        
+        if (message == "TOGGLE_RECORDING") {
+            isRecording = !isRecording;  // Toggle the flag
+            Serial.println(isRecording ? "Recording started" : "Recording stopped");
+            
+            // Send confirmation back to the client
+            webSocket.sendTXT(num, isRecording ? "Recording: ON" : "Recording: OFF");
+        }
+    }
+}
+

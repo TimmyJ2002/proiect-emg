@@ -1,0 +1,101 @@
+#include <WiFi.h>
+#include <WebSocketsServer.h>
+#include <FS.h>
+#include <SPIFFS.h>
+
+const char* ssid = "Leivis 2.4 GHz";
+const char* password = "Levente.";
+
+WebSocketsServer webSocket = WebSocketsServer(81);  // WebSocket port
+
+unsigned long previousMillis = 0;
+const long interval = 5;  // 5ms for 200Hz
+
+// Data array to hold sensor values
+float sensorData[1024];  // Adjust the size as needed
+int dataLength = 0;      // Number of valid data entries
+int currentIndex = 0;    // Tracks the current position in the array
+
+void setup() {
+  Serial.begin(921600);
+
+  // Initialize SPIFFS
+  if (!SPIFFS.begin(true)) {
+    Serial.println("An error occurred while mounting SPIFFS");
+    return;
+  }
+
+  // Load data into the array
+  loadDataFromFile();
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+  Serial.println(WiFi.localIP());
+
+  // Start WebSocket server
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+}
+
+void loop() {
+  webSocket.loop();  // Handle WebSocket events
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+
+    // Send the current sensor value
+    if (dataLength > 0) {
+      float sensorValue = sensorData[currentIndex];
+      String message = String(sensorValue);
+      Serial.println(message);
+      webSocket.broadcastTXT(message);
+
+      // Move to the next index, loop back to the start if needed
+      currentIndex = (currentIndex + 1) % dataLength;
+    }
+  }
+}
+
+void loadDataFromFile() {
+  File file = SPIFFS.open("/1.txt", "r");
+  if (!file) {
+    Serial.println("Failed to open file");
+    return;
+  }
+
+  Serial.println("Loading data...");
+  dataLength = 0;
+
+  // Read the file line by line and extract sensor values
+  while (file.available() && dataLength < 1024) {
+    String line = file.readStringUntil('\n');
+    float value = parseSensorValue(line);
+    if (!isnan(value)) {  // Ensure the value is valid
+      sensorData[dataLength++] = value;
+    }
+  }
+
+  file.close();
+  Serial.printf("Loaded %d sensor values into memory.\n", dataLength);
+}
+
+float parseSensorValue(String line) {
+  int tabIndex = line.indexOf('\t');  // Find the tab character
+  if (tabIndex == -1) {
+    return NAN;  // Return NAN if no tab is found
+  }
+
+  String value = line.substring(tabIndex + 1);  // Extract value after tab
+  value.trim();  // Remove any whitespace around the value
+  return value.toFloat();  // Convert the string to a float
+}
+
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length) {
+  // Handle WebSocket events (not needed for sending data)
+}
