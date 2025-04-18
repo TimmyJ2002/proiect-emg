@@ -126,22 +126,7 @@ class DataRecorder:
         self.recording = False
         print("Recording stopped.")
 
-    # def plot_data(self):
-    #     """Plots the recorded data."""
-    #     if len(self.time_data) == 0:
-    #         messagebox.showinfo("No Data", "No data recorded.")
-    #         return
-    #
-    #     plt.figure(figsize=(10, 6))
-    #     plt.plot(self.time_data, self.sensor_data, color='blue')
-    #     plt.title("Recorded Sensor Data")
-    #     plt.xlabel("Time (s)")
-    #     plt.ylabel("Sensor Value")
-    #     plt.ylim(0, 4100)  # Adjust this according to your sensor value range
-    #     plt.xlim(max(0, self.time_data[0]), self.time_data[-1])  # Show the full time range
-    #     plt.show()
-        
-    def plot_data_2(self):
+    def plot_data(self):
         """Plots the recorded data."""
         if len(self.time_data) == 0:
             messagebox.showinfo("No Data", "No data recorded.")
@@ -272,7 +257,7 @@ class GraphicalInterface:
             self.recorder.stop_recording()
             self.record_button.config(text="Start Recording")
             self.export_button.config(state=tk.NORMAL)  # Enable the export button when recording stops
-            self.recorder.plot_data_2()
+            self.recorder.plot_data()
 
             # Send a message to the ESP32 to stop recording
             
