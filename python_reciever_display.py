@@ -71,12 +71,6 @@ class DataRecorder:
                                         while self.live_time_data and self.live_time_data[0] < elapsed_time_live - 10:
                                             self.live_time_data.pop(0)
                                             self.live_sensor_data.pop(0)
-                                    
-                                    # Keep only last 10 seconds for recorded data
-                                    if self.recording and self.time_data:
-                                        while self.time_data and self.time_data[0] < elapsed_time_record - 10:
-                                            self.time_data.pop(0)
-                                            self.sensor_data.pop(0)
                                             
                             except ValueError as e:
                                 print(f"Failed to parse data: {e}")
