@@ -126,26 +126,28 @@ class DataRecorder:
         self.recording = False
         print("Recording stopped.")
 
-    def plot_data(self):
-        """Plots the recorded data."""
-        if len(self.time_data) == 0:
-            messagebox.showinfo("No Data", "No data recorded.")
-            return
-
-        plt.figure(figsize=(10, 6))
-        plt.plot(self.time_data, self.sensor_data, color='blue')
-        plt.title("Recorded Sensor Data")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Sensor Value")
-        plt.ylim(0, 4100)  # Adjust this according to your sensor value range
-        plt.xlim(max(0, self.time_data[0]), self.time_data[-1])  # Show the full time range
-        plt.show()
+    # def plot_data(self):
+    #     """Plots the recorded data."""
+    #     if len(self.time_data) == 0:
+    #         messagebox.showinfo("No Data", "No data recorded.")
+    #         return
+    #
+    #     plt.figure(figsize=(10, 6))
+    #     plt.plot(self.time_data, self.sensor_data, color='blue')
+    #     plt.title("Recorded Sensor Data")
+    #     plt.xlabel("Time (s)")
+    #     plt.ylabel("Sensor Value")
+    #     plt.ylim(0, 4100)  # Adjust this according to your sensor value range
+    #     plt.xlim(max(0, self.time_data[0]), self.time_data[-1])  # Show the full time range
+    #     plt.show()
         
     def plot_data_2(self):
         """Plots the recorded data."""
         if len(self.time_data) == 0:
             messagebox.showinfo("No Data", "No data recorded.")
             return
+        
+        plt.close('all')
             
             
         max_sensor_value = max(self.sensor_data) if self.sensor_data else 0
@@ -253,11 +255,15 @@ class GraphicalInterface:
 
         # Embed the Matplotlib graph in the Tkinter GUI
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().pack(pady=20)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
         # Start live graph update
         self.update_live_graph()
-            
+        
+        root.rowconfigure(0, weight=1)
+        root.columnconfigure(0, weight=1)
+
+
     def toggle_recording(self):
         
         asyncio.run(self.recorder.send_message("TOGGLE_RECORDING"))
